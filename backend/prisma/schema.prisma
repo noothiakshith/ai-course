@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://neondb_owner:npg_hsryL3T4kHzM@ep-curly-haze-adfjtoqr-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+
+  courses Course[]
+}
+
+model Course {
+  id           String     @id @default(cuid())
+  title        String
+  description  String
+  tags         String[]
+  difficulty   Difficulty
+  durationDays Int
+  createdAt    DateTime   @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  modules Module[]
+}
+
+model Module {
+  id       String @id @default(cuid())
+  title    String
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId String
+
+  lessons Lesson[]
+}
+
+model Lesson {
+  id               String   @id @default(cuid())
+  title            String
+  objectives       String[]
+  isEnriched       Boolean  @default(false)
+  hinglishAudioUrl String?
+  createdAt        DateTime @default(now())
+
+  module   Module @relation(fields: [moduleId], references: [id])
+  moduleId String
+
+  contentBlocks ContentBlock[]
+  videos        VideoSearch[]
+}
+
+model ContentBlock {
+  id    String    @id @default(cuid())
+  order Int
+  type  BlockType
+
+  text     String?
+  language String?
+  videoUrl String?
+
+  lesson   Lesson @relation(fields: [lessonId], references: [id])
+  lessonId String
+
+  mcq   MCQOption? @relation(fields: [mcqId], references: [id])
+  mcqId String?
+}
+
+model MCQOption {
+  id           String         @id @default(cuid())
+  question     String
+  options      String[]
+  answer       Int
+  explanation  String?
+  ContentBlock ContentBlock[]
+}
+
+model VideoSearch {
+  id       String @id @default(cuid())
+  query    String
+  lesson   Lesson @relation(fields: [lessonId], references: [id])
+  lessonId String
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum BlockType {
+  HEADING
+  PARAGRAPH
+  CODE
+  VIDEO
+  MCQ
+}
